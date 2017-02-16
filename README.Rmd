@@ -1,0 +1,13 @@
+---
+title: "GitHub Dashboard in R"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R flexdashboard expectations
+
+- expects `GITHUB_USER` in the environment
+- expects `GITHUB_PAT` in the environment
