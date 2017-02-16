@@ -1,6 +1,11 @@
 GitHub Dashboard in R
 ================
 
+Example
+-------
+
+-   <https://hrbrmstr.github.io/githubdashboard/>
+
 R flexdashboard expectations
 ----------------------------
 
