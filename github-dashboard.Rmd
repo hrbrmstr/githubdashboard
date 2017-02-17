@@ -29,7 +29,7 @@ map_df(issues, function(x) {
          repo_url = x$repository$html_url,
          user_login = x$user$login,
          user_url = x$user$url),
-    x[c("url", "number", "state", "updated_at")])
+    x[c("html_url", "number", "state", "updated_at")])
 }) %>%
   mutate(updated_at = anytime(updated_at, asUTC=TRUE)) -> issues_df
 ```
@@ -62,7 +62,7 @@ repos_df %>%
 issues_df %>%
   mutate(Repository = sprintf('<a href="%s">%s</a>', repo_url, repo_name),
          `Submitted by` = sprintf('<a href="%s">%s</a>', user_url, user_login),
-         `Issue #` = sprintf('<a href="%s">#%s</a>', url, number),
+         `Issue #` = sprintf('<a href="%s">#%s</a>', html_url, number),
          Age = pretty_diff(updated_at)) -> issues_df
 ```
 
