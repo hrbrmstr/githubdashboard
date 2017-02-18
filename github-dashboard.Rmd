@@ -15,7 +15,7 @@ library(DT)
 library(knitr)
 ```
 
-```{r dev, cache=TRUE, echo=FALSE, include=FALSE}
+```{r dev, echo=FALSE, include=FALSE}
 USER <- Sys.getenv('GITHUB_USER')
 
 user <- gh("/users/:user", user=USER)
