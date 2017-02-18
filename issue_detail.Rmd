@@ -1,0 +1,15 @@
+```{r include=FALSE}
+# TODO Make this smarter
+body <- recent_issues$body[i]
+body <- gsub("![", "[=> Image link ... ", body, fixed=TRUE)
+```
+
+Row
+-----------------------------------------------------------------------
+
+### `r sprintf("%s > %s (#%s)", recent_issues$repo_name[i], recent_issues$Title[i], recent_issues$number[i])`
+
+`r body`
+
+> `r sprintf('<a href="%s">Issue Link</a>', recent_issues$html_url[i], recent_issues$number[i])`
+

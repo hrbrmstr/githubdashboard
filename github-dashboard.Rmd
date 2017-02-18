@@ -2,6 +2,7 @@
 title: "`r sprintf('GitHub Dashboard for [%s] on [%s]', Sys.getenv('GITHUB_USER'), Sys.Date())`"
 output:
   flexdashboard::flex_dashboard:
+    theme: yeti
     orientation: rows
     vertical_layout: scroll
 ---
@@ -11,15 +12,18 @@ library(gh)
 library(anytime)
 library(tidyverse)
 library(DT)
+library(knitr)
 ```
 
-```{r dev, echo=FALSE, include=FALSE}
+```{r dev, cache=TRUE, echo=FALSE, include=FALSE}
 USER <- Sys.getenv('GITHUB_USER')
 
 user <- gh("/users/:user", user=USER)
 repos <- gh("/users/:user/repos", user=USER, .limit = Inf)
 issues <- gh("/user/issues", .limit = Inf)
+```
 
+```{r dev2, echo=FALSE, include=FALSE}
 map_df(repos, ~.[c("name", "html_url", "stargazers_count", "forks_count", "has_issues",
                    "open_issues", "updated_at")]) %>%
   mutate(updated_at = anytime(updated_at, asUTC=TRUE)) -> repos_df
@@ -29,7 +33,7 @@ map_df(issues, function(x) {
          repo_url = x$repository$html_url,
          user_login = x$user$login,
          user_url = x$user$url),
-    x[c("html_url", "number", "state", "updated_at")])
+    x[c("html_url", "number", "state", "updated_at", "title", "body")])
 }) %>%
   mutate(updated_at = anytime(updated_at, asUTC=TRUE)) -> issues_df
 ```
@@ -60,11 +64,15 @@ repos_df %>%
   select(Repository, everything(), -name, -html_url, -has_issues) -> repos_df
 
 issues_df %>%
+  rename(Title=title) %>% 
   mutate(Repository = sprintf('<a href="%s">%s</a>', repo_url, repo_name),
          `Submitted by` = sprintf('<a href="%s">%s</a>', user_url, user_login),
          `Issue #` = sprintf('<a href="%s">#%s</a>', html_url, number),
          Age = pretty_diff(updated_at)) -> issues_df
 ```
+
+Overview
+===================================== 
 
 Row
 -----------------------------------------------------------------------
@@ -119,12 +127,42 @@ arrange(repos_df, desc(updated_at)) %>%
 Row
 -----------------------------------------------------------------------
 
-### Open issues by date [`r sprintf("%s total open issues", scales::comma(nrow(filter(issues_df, state == "open"))))`]
+### Open issues by date
 
 ```{r}
 filter(issues_df, state == "open") %>%
   arrange(desc(updated_at)) %>%
-  select(Repository, `Submitted by`, `Issue #`, Age) %>%
+  select(Repository, `Submitted by`, Title, `Issue #`, Age) %>%
   datatable(escape=FALSE,
-            options = list(columnDefs = list(list(className = 'dt-right', targets = 3:4))))
+            options = list(columnDefs = list(list(className = 'dt-right', targets = c(4:5)))))
 ```
+
+>  `r sprintf("%s total open issues", scales::comma(nrow(filter(issues_df, state == "open"))))`
+
+Recent Issue Detail
+===================================== 
+
+```{r issue_detail, include=FALSE}
+options(knitr.duplicate.label = 'allow')
+
+issues_df %>% 
+  mutate(hr_diff = as.numeric(difftime(Sys.time(), 
+                           issues_df$updated_at, 
+                           units = "hours"))) %>% 
+  filter(hr_diff <= 48) %>% 
+  arrange(hr_diff) -> recent_issues
+
+out <-  NULL
+cat("", file = "/tmp/k.txt")
+for (i in 1:nrow(recent_issues)) {
+  res <- knit_child('issue_detail.Rmd', envir=parent.frame())
+  cat(res, file="/tmp/k.txt", append = TRUE)
+  out <- c(out, res)
+}
+
+options(knitr.duplicate.label = 'no way')
+```
+
+`r paste(out, sep=" ", collapse="\n")`
+
+
