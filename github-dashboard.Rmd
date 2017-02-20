@@ -147,17 +147,22 @@ options(knitr.duplicate.label = 'allow')
 
 issues_df %>% 
   mutate(hr_diff = as.numeric(difftime(Sys.time(), 
-                           issues_df$updated_at, 
-                           units = "hours"))) %>% 
+                                       issues_df$updated_at, 
+                                       units = "hours"))) %>% 
   filter(hr_diff <= 48) %>% 
   arrange(hr_diff) -> recent_issues
 
-out <-  NULL
-cat("", file = "/tmp/k.txt")
-for (i in 1:nrow(recent_issues)) {
-  res <- knit_child('issue_detail.Rmd', envir=parent.frame())
-  cat(res, file="/tmp/k.txt", append = TRUE)
-  out <- c(out, res)
+if (nrow(recent_issues) == 0) {
+  out <- "### No new issues in the past 48 hours"
+} else {
+  out <-  NULL
+  cat("", file = "/tmp/k.txt")
+  for (i in 1:nrow(recent_issues)) {
+    res <- knit_child('issue_detail.Rmd', envir=parent.frame())
+    cat(res, file="/tmp/k.txt", append = TRUE)
+    out <- c(out, res)
+  }
+  
 }
 
 options(knitr.duplicate.label = 'no way')
