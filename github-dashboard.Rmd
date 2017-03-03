@@ -8,7 +8,7 @@ output:
 ---
 ```{r setup, include=FALSE}
 library(flexdashboard)
-library(gh)
+library(gh) # devtools::install_github("r-pkgs/gh")
 library(anytime)
 library(tidyverse)
 library(DT)
@@ -25,17 +25,17 @@ issues <- gh("/user/issues", .limit = Inf)
 
 ```{r dev2, echo=FALSE, include=FALSE}
 map_df(repos, ~.[c("name", "html_url", "stargazers_count", "forks_count", "has_issues",
-                   "open_issues", "updated_at")]) %>%
-  mutate(updated_at = anytime(updated_at, asUTC=TRUE)) -> repos_df
+                   "open_issues", "updated_at", "pushed_at")]) %>%
+  mutate(updated_at = anytime(pushed_at, asUTC=TRUE), pushed_at = NULL) -> repos_df
 
 map_df(issues, function(x) {
   c(list(repo_name = x$repository$full_name,
          repo_url = x$repository$html_url,
          user_login = x$user$login,
          user_url = x$user$url),
-    x[c("html_url", "number", "state", "updated_at", "title", "body")])
+    x[c("html_url", "number", "state", "updated_at", "created_at", "title", "body")])
 }) %>%
-  mutate(updated_at = anytime(updated_at, asUTC=TRUE)) -> issues_df
+  mutate(updated_at = anytime(created_at, asUTC=TRUE), created_at = NULL) -> issues_df
 ```
 
 ```{r include=FALSE}
@@ -53,7 +53,8 @@ pretty_diff <- function(rel) {
     x <- Sys.time() - as.POSIXct(x, tz=Sys.timezone())
     y <- unclass(x)
     attr(y, "units") <- NULL
-    sprintf("%3.2f %s",  abs(y), attr(x, "units"))
+    # sprintf("%3.2f %s",  abs(y), attr(x, "units"))
+    paste(format(abs(y), digits = 0, nsmall = 2), attr(x, "units"))
   })
 }
 
@@ -169,5 +170,4 @@ options(knitr.duplicate.label = 'no way')
 ```
 
 `r paste(out, sep=" ", collapse="\n")`
-
 
